@@ -57,10 +57,6 @@ export function totalAvailableThreads(ns: NS, servers: string[], script: string)
 	return servers.reduce((acc, s) => acc + calcThreads(ns, script, s), 0)
 }
 
-export function canDeploy(ns:NS, servers: string[], batch: Batch): boolean{
-
-	return true
-}
 /**Calculates number of script threads that can be run on single host server */
 export function calcThreads(ns: NS, script: string, host: string): number {
 	if (!ns.serverExists(host)) throw ("Invalid Server Name")
@@ -84,7 +80,8 @@ export async function waitPids(ns: NS, pids: number[], message = ""): Promise<vo
 }
 
 export async function waitBatches(ns: NS, batches: Batch[]) {
-	ns.print(`WARN Waiting on batches ${batches.reduce((acc, b) => acc + b.id + ',', "")}`)
+	if (DEBUG)
+		ns.print(`WARN Waiting on batches ${batches.reduce((acc, b) => acc + b.id + ',', "")}`)
 	while (batches.some(b => b.isDeployed())) { await ns.sleep(5) }
 }
 
@@ -120,7 +117,7 @@ export function deployScript(ns: NS, script: string, threads: number, servers: s
 	}
 	//Should return before exiting loop
 	killPids(ns, pids)
-	ns.print(`ERROR deployScript() Can't deploy ${threads} ${script}`)
+	if (DEBUG) ns.print(`ERROR DEBUG deployScript() Can't deploy ${threads} ${script}`)
 	return []
 }
 

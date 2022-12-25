@@ -1,6 +1,6 @@
 import { findAdminServers, deployScript, killPids, waitPids } from "lib/utils"
 import { NS } from "@ns"
-import { BATCHDELAY, DEBUG, SCRIPTS } from "lib/constants"
+import { BATCHDELAY, SCRIPTS } from "lib/constants"
 
 
 export class HWGW implements Batch {
@@ -35,8 +35,6 @@ export class HWGW implements Batch {
 
 	public deploy(): boolean {
 		const servers = findAdminServers(this.ns)
-		if (DEBUG) this.ns.print(`INFO ${this.id}: deploying across ${servers}`)
-
 		//Hack
 		this.pids.push(...deployScript(
 			this.ns,
@@ -73,7 +71,14 @@ export class HWGW implements Batch {
 			this.target,
 			`${this.delays[3]}`,
 			this.id))
-		return this.isDeployed()
+		if (this.isDeployed()) {
+			this.ns.print(`SUCCESS ${this.id}: Deployed!`)
+			return true
+		}
+		else {
+			this.ns.print(`FAIL ${this.id}: Can't Deploy!`)
+			return false
+		}
 	}
 
 	public kill(): void {
@@ -81,10 +86,10 @@ export class HWGW implements Batch {
 	}
 
 	public log(): void {
-		this.ns.print(`Threads... ${this.threads}`)
-		this.ns.print(`Delays.... ${this.delays}`)
-		this.ns.print(`Times..... ${this.times}`)
-		this.ns.print(`Ends...... ${this.ends}`)
+		this.ns.print(`INFO Threads... ${this.threads}`)
+		this.ns.print(`INFO Delays.... ${this.delays}`)
+		this.ns.print(`INFO Times..... ${this.times}`)
+		this.ns.print(`INFO Ends...... ${this.ends}`)
 	}
 	public async wait() {
 		await waitPids(this.ns, this.pids)
@@ -121,7 +126,7 @@ export class HWGW implements Batch {
 	/**Returns the number of threads required for a batch*/
 	private calcBatchThreads(): number[] {
 		const threads = [0, 0, 0, 0]
-		const growAmount = 1.1 * (1 / (1 - this.hackAmount))
+		const growAmount = Math.ceil(1 / (1 - this.hackAmount))
 		const value = this.hackAmount * this.ns.getServerMaxMoney(this.target)
 		threads[0] = Math.ceil(this.ns.hackAnalyzeThreads(this.target, value)) //hack
 		threads[1] = Math.ceil(this.ns.hackAnalyzeSecurity(threads[0], this.target) / 0.05) //weak

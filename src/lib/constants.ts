@@ -1,6 +1,6 @@
 //Commonly used constants. 
 
-export const DEBUG = true
+export const DEBUG = false
 
 export const SCRIPTS = Object.freeze({
 	HACK: "/lib/hack.js",
@@ -9,9 +9,10 @@ export const SCRIPTS = Object.freeze({
 });
 
 
+export const MAXBATCHES = 10 //Maximum number of batches per server
 export const BATCHTARGET = "n00dles" //target server
-export const HACKAMOUNT = 0.2 //amount to hack for
-export const BATCHDELAY = 100; //Delay between batch steps 
+export const HACKAMOUNT = 0.99 //amount to hack for
+export const BATCHDELAY = 50; //Delay between batch steps 
 export const BATCHGROWTH = 2 //Default growth rate
 
 

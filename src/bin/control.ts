@@ -1,8 +1,8 @@
 import { NS } from "@ns";
-import { GW } from "classes/GW";
 import { HWGW } from "classes/HWGW";
-import { BATCHDELAY, BATCHTARGET, DEBUG, HACKAMOUNT, SCRIPTS } from "lib/constants";
-import { deployScript, findAdminServers, isPrepared, isWeakened, totalAvailableThreads, waitBatches, waitPids } from "lib/utils";
+import { BATCHDELAY, BATCHTARGET, DEBUG, HACKAMOUNT } from "lib/constants";
+import { findAdminServers, isPrepared, waitBatches } from "lib/utils";
+import { prepareServer } from "/lib/batchlib";
 
 /** @param {NS} ns */
 export async function main(ns: NS) {
@@ -38,40 +38,6 @@ export async function main(ns: NS) {
 
 
 
-async function prepareServer(ns: NS, target: string, servers: string[]) {
-	//Send files to attacking servers
-	servers.forEach(p => ns.scp(Object.values(SCRIPTS), p))
 
-	let requiredWeakens = Math.ceil((ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target)) / 0.05)
-
-	ns.print(`INFO PREP: Weakening server with ${requiredWeakens} threads...`)
-	const pids = []
-	while (requiredWeakens > 0) {
-		const deployedThreads = Math.min(totalAvailableThreads(ns, servers, SCRIPTS.WEAKEN), requiredWeakens)
-		pids.push(...deployScript(ns, SCRIPTS.WEAKEN, deployedThreads, servers, target, "0"))
-		requiredWeakens -= deployedThreads
-	}
-	await waitPids(ns, pids)
-	if (!isWeakened(ns, target)) { ns.print("ERROR PREP: Weaken incomplete"), ns.exit() }
-
-	let requiredGrows = Math.ceil(Math.log2(ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target)))
-	ns.print(`INFO PREP: Making ${requiredGrows} GW Batches...`)
-	let batches: GW[] = []
-	while (requiredGrows > 0) {
-		const batch = new GW(ns, target, `GW-${batches.length}`)
-		batches.push(batch)
-		if (!batch.deploy()) {
-			ns.print(`WARN PREP: Cannot deploy batch, waiting...`)
-			await waitBatches(ns, batches)
-			batches = []
-		}
-		if (DEBUG) batch.log()
-		requiredGrows -= 1
-	}
-	await waitBatches(ns, batches)
-
-	if (isPrepared(ns, target)) ns.print(`SUCCESS PREP: ${target} Prepared...`)
-	else { ns.print(`ERROR PREP: Failed to Prepare ${target}`), ns.exit() }
-}
 
 

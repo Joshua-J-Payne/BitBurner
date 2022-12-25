@@ -46,7 +46,14 @@ export class GW implements Batch {
 			this.target,
 			`${this.delays[1]}`,
 			this.id))
-		return this.isDeployed()
+		if (this.isDeployed()) {
+			this.ns.print(`SUCCESS ${this.id}: Deployed!`)
+			return true
+		}
+		else {
+			this.ns.print(`FAIL ${this.id}: Can't Deploy!`)
+			return false
+		}
 	}
 
 	public kill(): void {
