@@ -36,21 +36,7 @@ export function canHack(ns: NS, server: string): boolean {
 	return (ns.hasRootAccess(server) && ns.getServerRequiredHackingLevel(server) <= ns.getHackingLevel())
 }
 
-export function isWeakened(ns: NS, target: string): boolean {
-	return ns.getServerSecurityLevel(target) === ns.getServerMinSecurityLevel(target)
-}
 
-export function isGrown(ns: NS, target: string): boolean {
-	return ns.getServerMoneyAvailable(target) === ns.getServerMaxMoney(target)
-}
-
-export function isPrepared(ns: NS, target: string): boolean {
-	if (!DEBUG) return isWeakened(ns, target) && isGrown(ns, target)
-	const w = isWeakened(ns, target)
-	const g = isGrown(ns, target)
-	ns.print(`DEBUG: isPrepared() returned isWeakened(): ${w} isGrown(): ${g}`)
-	return w && g
-}
 
 /**Calculates the total amount of script threads that can be run on server list */
 export function totalAvailableThreads(ns: NS, servers: string[], script: string): number {
@@ -73,7 +59,7 @@ export function calcThreads(ns: NS, script: string, host: string): number {
  * @param pids Array of pids
  * @param message Message to be sent upon completion
 */
-export async function waitPids(ns: NS, pids: number[], message = ""): Promise<void> {
+export async function waitPids(ns: NS, pids: number | number[], message = ""): Promise<void> {
 	if (!Array.isArray(pids)) pids = [pids];
 	while (pids.some(p => ns.isRunning(p))) { await ns.sleep(5); }
 	if (message) ns.print(message)

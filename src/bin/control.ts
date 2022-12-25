@@ -1,8 +1,8 @@
 import { NS } from "@ns";
 import { HWGW } from "classes/HWGW";
-import { BATCHDELAY, BATCHTARGET, DEBUG, HACKAMOUNT } from "lib/constants";
-import { findAdminServers, isPrepared, waitBatches } from "lib/utils";
-import { prepareServer } from "/lib/batchlib";
+import { BATCHDELAY, BATCHTARGET, DEBUG, HACKAMOUNT, PREPARESCRIPT } from "lib/constants";
+import { findAdminServers, waitBatches, waitPids } from "lib/utils";
+import { isPrepared } from "./prepareServer";
 
 /** @param {NS} ns */
 export async function main(ns: NS) {
@@ -13,7 +13,8 @@ export async function main(ns: NS) {
 	if (!ns.serverExists(target)) ns.tprint("ERROR Invalid target"), ns.exit()
 	if (hackAmount >= 1) ns.tprint("ERROR Cannot take 100% of funds"), ns.exit()
 	const servers = findAdminServers(ns)
-	await prepareServer(ns, target, servers)
+	const pid = ns.exec(PREPARESCRIPT, "home", 1, target, ...servers)
+	waitPids(ns, pid)
 
 	/**The Main Script
 	 * Create batches and deploy

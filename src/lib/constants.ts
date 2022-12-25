@@ -8,8 +8,13 @@ export const SCRIPTS = Object.freeze({
 	GROW: "/lib/grow.js",
 });
 
+export const XPTARGET = 'joesguns'
 
-export const MAXBATCHES = 10 //Maximum number of batches per server
+export const PREPARESCRIPT = "/bin/prepareServer.js"
+export const PREPAREPORT = 69
+
+
+export const MAXBATCHES = 1 //Maximum number of batches per server
 export const BATCHTARGET = "n00dles" //target server
 export const HACKAMOUNT = 0.99 //amount to hack for
 export const BATCHDELAY = 50; //Delay between batch steps 
