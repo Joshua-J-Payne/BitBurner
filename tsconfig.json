@@ -1,5 +1,5 @@
 {
-  "include": ["NetscriptDefinitions.d.ts", "src/**/*"],
+  "include": ["NetscriptDefinitions.d.ts", "src/**/*", "types/Batch.d.ts"],
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",

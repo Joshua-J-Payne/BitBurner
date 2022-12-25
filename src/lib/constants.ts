@@ -1,14 +1,17 @@
 //Commonly used constants. 
 
+export const DEBUG = true
+
 export const SCRIPTS = Object.freeze({
-	HACK: "lib/hack.js",
-	WEAKEN: "lib/weaken.js",
-	GROW: "lib/grow.js",
+	HACK: "/lib/hack.js",
+	WEAKEN: "/lib/weaken.js",
+	GROW: "/lib/grow.js",
 });
+
 
 export const BATCHTARGET = "n00dles" //target server
 export const HACKAMOUNT = 0.2 //amount to hack for
-export const BATCHDELAY = 50; //Delay between batch steps 
+export const BATCHDELAY = 100; //Delay between batch steps 
 export const BATCHGROWTH = 2 //Default growth rate
 
 

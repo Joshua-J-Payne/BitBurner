@@ -42,7 +42,7 @@ export async function main(ns: NS) {
 	let ram = C.PSERVMINRAM
 	// eslint-disable-next-line no-constant-condition
 	while (true) {
-		ns.sleep(5)
+		await ns.sleep(5)
 		let pservs = ns.getPurchasedServers()
 		while (pservs.length < ns.getPurchasedServerLimit()) {
 			const hostname = C.PSERVPREFIX + (pservs.length + 1)
