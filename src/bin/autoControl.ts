@@ -16,12 +16,12 @@ export async function main(ns: NS) {
     while (true) {
         await ns.sleep(5)
         for (const t of targets) {
-            if (!isPrepared(ns, t)) {
-                if (ns.isRunning(PREPARESCRIPT, "home", t)) continue
+            //Check if prepped
+            if (!isPrepared(ns, t) && ns.isRunning(PREPARESCRIPT, "home", t)) {
                 ns.print(`INFO AUTOCTRL: Prepping ${t}`)
                 ns.exec(PREPARESCRIPT, "home", 1, t)
             }
-            //Erase attack
+            //Check if attack is finished
             else if (attacks.has(t)) {
                 const batches = attacks.get(t)
                 if (!batches || batches.some(b => b.isDeployed())) continue
