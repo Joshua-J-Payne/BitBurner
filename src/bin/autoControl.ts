@@ -17,7 +17,7 @@ export async function main(ns: NS) {
         await ns.sleep(5)
         for (const t of targets) {
             //Check if prepped
-            if (!isPrepared(ns, t) && ns.isRunning(PREPARESCRIPT, "home", t)) {
+            if (!isPrepared(ns, t) && !ns.isRunning(PREPARESCRIPT, "home", t)) {
                 ns.print(`INFO AUTOCTRL: Prepping ${t}`)
                 ns.exec(PREPARESCRIPT, "home", 1, t)
             }
