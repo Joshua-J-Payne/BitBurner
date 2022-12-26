@@ -7,12 +7,12 @@ import { getAdminServers } from "lib/utils";
 export async function main(ns: NS) {
     ns.disableLog("ALL")
     const f = ns.flags([
-        ['tail', false],
-        ['s', SERVERCOUNT],
-        ['h', HACKAMOUNT],
-        ['b', BATCHMAX],
+        ["servers", SERVERCOUNT],
+        ["hack", HACKAMOUNT],
+        ["batches", BATCHMAX],
+        ["tail", false],
     ])
-    if(typeof f.s !=='number' || typeof f.h !== 'number' || typeof f.b !== 'number') {
+    if (typeof f.servers !== 'number' || typeof f.hack !== 'number' || typeof f.batches !== 'number') {
         ns.tprint("ERROR Invalid input")
         ns.exit()
     }
@@ -20,14 +20,14 @@ export async function main(ns: NS) {
     if (f.tail) ns.tail()
 
     const servers = getAdminServers(ns)
-    const targets = prioritizeServers(ns, servers).slice(0, f.s)
+    const targets = prioritizeServers(ns, servers).slice(0, f.servers)
     const attacks = new Map<string, Batch[]>()
     // eslint-disable-next-line no-constant-condition
     while (true) {
         await ns.sleep(5)
         for (const t of targets) {
             //Check if prepped
-            if (!isPrepared(ns, t) && !ns.isRunning(PREPARESCRIPT, "home", t)) {
+            if (!attacks.has(t) && !isPrepared(ns, t) && !ns.isRunning(PREPARESCRIPT, "home", t)) {
                 ns.print(`INFO AUTOCTRL: Prepping ${t}`)
                 ns.exec(PREPARESCRIPT, "home", 1, t)
             }
@@ -41,7 +41,7 @@ export async function main(ns: NS) {
             //Create and deploy new attack
             else {
                 ns.print(`INFO AUTOCTRL: Attacking ${t}`)
-                const batches = await deployHWGW(ns, t, f.b, f.h)
+                const batches = await deployHWGW(ns, t, f.batches, f.hack)
                 attacks.set(t, batches)
             }
         }
