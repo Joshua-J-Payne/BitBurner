@@ -1,16 +1,26 @@
 import { NS } from "@ns";
 import { deployHWGW, isPrepared, prioritizeServers } from "lib/batchlib";
-import { BATCHMAX, PREPARESCRIPT, SERVERCOUNT } from "lib/constants";
+import { BATCHMAX, HACKAMOUNT, PREPARESCRIPT, SERVERCOUNT } from "lib/constants";
 import { getAdminServers } from "lib/utils";
 
 /** @param {NS} ns */
 export async function main(ns: NS) {
     ns.disableLog("ALL")
-    const flags = ns.flags([['tail', false]])
-    if (flags.tail) ns.tail()
+    const f = ns.flags([
+        ['tail', false],
+        ['s', SERVERCOUNT],
+        ['h', HACKAMOUNT],
+        ['b', BATCHMAX],
+    ])
+    if(typeof f.s !=='number' || typeof f.h !== 'number' || typeof f.b !== 'number') {
+        ns.tprint("ERROR Invalid input")
+        ns.exit()
+    }
+
+    if (f.tail) ns.tail()
 
     const servers = getAdminServers(ns)
-    const targets = prioritizeServers(ns, servers).slice(0, SERVERCOUNT)
+    const targets = prioritizeServers(ns, servers).slice(0, f.s)
     const attacks = new Map<string, Batch[]>()
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -31,7 +41,7 @@ export async function main(ns: NS) {
             //Create and deploy new attack
             else {
                 ns.print(`INFO AUTOCTRL: Attacking ${t}`)
-                const batches = await deployHWGW(ns, t, BATCHMAX)
+                const batches = await deployHWGW(ns, t, f.b, f.h)
                 attacks.set(t, batches)
             }
         }
