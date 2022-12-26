@@ -1,8 +1,9 @@
 import { NS } from "@ns";
-import { DEBUG } from "lib/constants"
+import { DEBUG, SERVERFILE } from "lib/constants";
 
 /**Uses BFS to find every server*/
-export function findServers(ns: NS): string[] {
+export function searchServers(ns: NS): string[] {
+	ns.disableLog("scan")
 	const queue = [ns.getHostname()]
 	const visited: Set<string> = new Set([])
 	while (queue.length) {
@@ -16,8 +17,26 @@ export function findServers(ns: NS): string[] {
 	return Array.from(visited)
 }
 
+//returns servers in SERVERFILE. 
+export function getServers(ns: NS): string[] {
+	if (ns.fileExists(SERVERFILE)) return JSON.parse(ns.read(SERVERFILE))
+	else {
+		ns.tprint("ERROR Server file not found")
+		ns.exit()
+	}
+}
+
+
+/**Gets a list of all servernames with admin access*/
+export function getAdminServers(ns: NS): string[] {
+	return getServers(ns).filter(s => ns.hasRootAccess(s))
+}
+
 /**Runs all existing port openers on server */
 export function openPorts(ns: NS, server: string) {
+	ns.disableLog("brutessh"), ns.disableLog("relaysmtp")
+	ns.disableLog("httpworm"), ns.disableLog("sqlinject")
+	ns.disableLog("ftpcrack")
 	//Put every available port opening script here
 	if (ns.fileExists("BruteSSH.exe")) ns.brutessh(server)
 	if (ns.fileExists("FTPCrack.exe")) ns.ftpcrack(server)
@@ -26,10 +45,6 @@ export function openPorts(ns: NS, server: string) {
 	if (ns.fileExists("relaySMTP.exe")) ns.relaysmtp(server)
 }
 
-/**Gets a list of all servernames with admin access*/
-export function findAdminServers(ns: NS): string[] {
-	return findServers(ns).filter(s => ns.hasRootAccess(s))
-}
 
 /**Checks if server is hackable*/
 export function canHack(ns: NS, server: string): boolean {
@@ -64,11 +79,22 @@ export async function waitPids(ns: NS, pids: number | number[], message = ""): P
 	while (pids.some(p => ns.isRunning(p))) { await ns.sleep(5); }
 	if (message) ns.print(message)
 }
+export async function waitAnyPids(ns: NS, pids: number | number[]): Promise<void> {
+	if (!Array.isArray(pids)) pids = [pids];
+	while (pids.every(p => ns.isRunning(p))) { await ns.sleep(5); }
+}
 
-export async function waitBatches(ns: NS, batches: Batch[]) {
+export async function waitBatches(ns: NS, batches: Batch[] | Batch) {
+	if (!Array.isArray(batches)) batches = [batches]
 	if (DEBUG)
-		ns.print(`WARN Waiting on batches ${batches.reduce((acc, b) => acc + b.id + ',', "")}`)
-	while (batches.some(b => b.isDeployed())) { await ns.sleep(5) }
+		ns.print(`WARN Waiting on all batches ${batches.reduce((acc, b) => acc + b.id + ',', "")}`)
+	while (batches.some(b => b && b.isDeployed())) { await ns.sleep(5) }
+}
+export async function waitAnyBatches(ns: NS, batches: Batch[] | Batch) {
+	if (!Array.isArray(batches)) batches = [batches]
+	if (DEBUG)
+		ns.print(`WARN Waiting on a batch to end ${batches.reduce((acc, b) => acc + b.id + ',', "")}`)
+	while (batches.every(b => b && b.isDeployed())) { await ns.sleep(5) }
 }
 
 /**Kills all pids in list

@@ -1,23 +1,16 @@
 import { NS } from "@ns";
 import { GW } from "classes/GW";
-import { calcGrows, calcWeakens, isGrown, isPrepared, isWeakened } from "lib/batchlib";
-import { DEBUG, PREPAREPORT, SCRIPTS } from "lib/constants";
-import { deployScript, totalAvailableThreads, waitBatches, waitPids } from "lib/utils";
+import { calcGrows, calcWeakens, deployGW, isGrown, isPrepared, isWeakened } from "lib/batchlib";
+import { SCRIPTS } from "lib/constants";
+import { deployScript, getAdminServers, totalAvailableThreads, waitBatches, waitPids } from "lib/utils";
 
 export async function main(ns: NS): Promise<void> {
     ns.disableLog("ALL")
-    const [target, ...serverargs] = ns.args 
-    const servers = serverargs.map(a => a.toString()) 
-    if (typeof target !== "string" || !ns.serverExists(target)) {
-        ns.tprint("ERROR PREP: Invalid Target!")
-    }
-    else {
-        const prepared = await prepareServer(ns, target, servers)
-        !prepared ? ns.writePort(PREPAREPORT, `ERROR PREP: ${target} Failed!`) : {}
-    }
+    const target = ns.args[0].toString()
+    const servers = getAdminServers(ns)
+    await prepareServer(ns, target, servers)
 }
 async function prepareServer(ns: NS, target: string, servers: string[]) {
-
     //Initial Weaken
     const pids = []
     while (!isWeakened(ns, target)) {
@@ -34,23 +27,21 @@ async function prepareServer(ns: NS, target: string, servers: string[]) {
         await waitPids(ns, pids)
     }
 
-    //GW Batches
-    let batches: GW[] = []
+    //GW Batch
     while (!isGrown(ns, target)) {
-        const requiredGrows = calcGrows(ns, target)
-        ns.print(`INFO PREP: Making ${requiredGrows} GW Batches...`)
-        for (let i = 0; i < requiredGrows; i++) {
-            const batch = new GW(ns, target, `GW-${target}-${i}`)
-            if (!batch.deploy()) {
-                ns.print(`WARN PREP: Cannot deploy batch, waiting...`)
-                await waitBatches(ns, batches)
-                batches = []
-            }
-            else batches.push(batch)
-            if (DEBUG) batch.log()
+        const growAmount = ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target)
+        ns.print(`INFO PREP: Trying single GW Batch...`)
+        const batch = new GW(ns, target, `GW-${target}-0`, growAmount)
+        if (batch.deploy()) {
+            ns.print(`SUCCESS PREP: Deployed ${batch.id}!`)
+            await waitBatches(ns, batch)
         }
-        await waitBatches(ns, batches)
-
+        else {
+            ns.print(`FAIL PREP: Cannot deploy batch! Splitting...`)
+            const grows = calcGrows(ns, target)
+            await deployGW(ns, target, grows)
+            ns.print(`SUCCESS PREP: Deployed ${grows} Batches!`)
+        }
     }
     return isPrepared(ns, target)
 }

@@ -1,5 +1,8 @@
 import { NS } from "@ns";
-import { DEBUG } from "lib/constants";
+import { GW } from "classes/GW";
+import { HWGW } from "classes/HWGW";
+import { BATCHDELAY } from "lib/constants";
+import { waitAnyBatches } from "lib/utils";
 
 /**
  * Sorts a given list of servers by priority
@@ -53,27 +56,53 @@ function priority(ns: NS, server: string) {
 
 
 export function isWeakened(ns: NS, target: string): boolean {
-    return ns.getServerSecurityLevel(target) === ns.getServerMinSecurityLevel(target)
+	return ns.getServerSecurityLevel(target) === ns.getServerMinSecurityLevel(target)
 }
 
 export function isGrown(ns: NS, target: string): boolean {
-    return ns.getServerMoneyAvailable(target) === ns.getServerMaxMoney(target)
+	return ns.getServerMoneyAvailable(target) === ns.getServerMaxMoney(target)
 }
 
-export function isPrepared(ns: NS, target: string): boolean {
-    if (!DEBUG) return isWeakened(ns, target) && isGrown(ns, target)
-    const w = isWeakened(ns, target)
-    const g = isGrown(ns, target)
-    ns.print(`DEBUG: isPrepared() returned isWeakened(): ${w} isGrown(): ${g}`)
-    return w && g
+export function isPrepared(ns: NS, targets: string | string[]): boolean {
+	if (!Array.isArray(targets)) targets = [targets]
+	return targets.every(t => isWeakened(ns, t) && isGrown(ns, t))
 }
 
 
 export function calcGrows(ns: NS, target: string) {
-    return Math.ceil(Math.log2(ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target)))
+	return ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target)
 }
 
 export function calcWeakens(ns: NS, target: string) {
-    return Math.ceil((ns.getServerSecurityLevel(target)
-        - ns.getServerMinSecurityLevel(target)) / 0.05)
+	return Math.ceil((ns.getServerSecurityLevel(target)
+		- ns.getServerMinSecurityLevel(target)) / 0.05)
+}
+//exits as soon as one HWGW fails to deploy
+export async function deployHWGW(ns: NS, target: string, batchCnt: number, hackAmount?: number) {
+	const batches = Array(batchCnt)
+	for (let i = 0; i < batchCnt; i++) {
+		await ns.sleep(BATCHDELAY)
+		if (hackAmount)
+			batches[i] = new HWGW(ns, target, `HWGW-${target}-${i}`, hackAmount)
+		else batches[i] = new HWGW(ns, target, `HWGW-${target}-${i}`)
+		if (!batches[i].deploy()) break
+	}
+	return batches
+}
+//Waits until all GW batches deploy
+export async function deployGW(ns: NS, target: string, batchCnt: number, growAmount?: number) {
+	const batches = Array(batchCnt)
+	for (let i = 0; i < batchCnt; i++) {
+		await ns.sleep(BATCHDELAY)
+		if (growAmount)
+			batches[i] = new GW(ns, target, `GW-${target}-${i}`, growAmount)
+		else batches[i] = new GW(ns, target, `GW-${target}-${i}`)
+		while (!batches[i].deploy()) {
+			await waitAnyBatches(ns, batches)
+			batches.forEach((b, idx) => {
+				if (!b.isDeployed() && i !== idx)
+					batches[i] = undefined
+			})
+		}
+	}
 }

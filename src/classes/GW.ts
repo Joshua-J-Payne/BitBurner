@@ -1,12 +1,13 @@
 import { NS } from "@ns"
-import { BATCHDELAY, BATCHGROWTH, SCRIPTS } from "lib/constants"
-import { deployScript, findAdminServers, killPids, waitPids } from "lib/utils"
+import { BATCHDELAY, GROWTHAMOUNT, SCRIPTS } from "lib/constants"
+import { deployScript, getAdminServers, killPids, waitPids } from "lib/utils"
 
 export class GW implements Batch {
 	private ns: NS
 	readonly target: string
 	readonly id: string
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	private growAmount: number
 	readonly threads: number[]
 	private times: number[]
 	private delays: number[]
@@ -14,10 +15,11 @@ export class GW implements Batch {
 	private pids: number[]
 
 
-	constructor(ns: NS, target: string, id: string) {
+	constructor(ns: NS, target: string, id: string, growAmount = GROWTHAMOUNT) {
 		this.ns = ns
 		this.target = target
 		this.id = id
+		this.growAmount = growAmount
 		this.threads = this.calcBatchThreads()
 		this.times = this.calcBatchTimes()
 		this.delays = this.calcBatchDelays()
@@ -31,7 +33,8 @@ export class GW implements Batch {
 		return false
 	}
 	public deploy(): boolean {
-		const servers = findAdminServers(this.ns)
+		if(this.isDeployed()) return true
+		const servers = getAdminServers(this.ns)
 		this.pids.push(...deployScript(this.ns,
 			SCRIPTS.GROW,
 			this.threads[0],
@@ -102,7 +105,7 @@ export class GW implements Batch {
 	/**Returns the number of threads required for a batch*/
 	private calcBatchThreads(): number[] {
 		const threads = []
-		threads[0] = Math.ceil(this.ns.growthAnalyze(this.target, BATCHGROWTH))
+		threads[0] = Math.ceil(this.ns.growthAnalyze(this.target, this.growAmount))
 		threads[1] = Math.ceil(this.ns.growthAnalyzeSecurity(threads[0]) / 0.05)
 		return threads
 	}

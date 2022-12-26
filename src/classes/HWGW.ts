@@ -1,6 +1,6 @@
-import { findAdminServers, deployScript, killPids, waitPids } from "lib/utils"
 import { NS } from "@ns"
-import { BATCHDELAY, SCRIPTS } from "lib/constants"
+import { BATCHDELAY, HACKAMOUNT, SCRIPTS } from "lib/constants"
+import { deployScript, getAdminServers, killPids, waitPids } from "lib/utils"
 
 
 export class HWGW implements Batch {
@@ -15,7 +15,7 @@ export class HWGW implements Batch {
 	private pids: number[]
 
 
-	constructor(ns: NS, target: string, id: string, hackAmount: number) {
+	constructor(ns: NS, target: string, id: string, hackAmount = HACKAMOUNT) {
 		this.ns = ns
 		this.target = target
 		this.id = id
@@ -34,7 +34,8 @@ export class HWGW implements Batch {
 	}
 
 	public deploy(): boolean {
-		const servers = findAdminServers(this.ns)
+		if(this.isDeployed()) return true
+		const servers = getAdminServers(this.ns)
 		//Hack
 		this.pids.push(...deployScript(
 			this.ns,
