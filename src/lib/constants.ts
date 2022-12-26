@@ -10,7 +10,6 @@ export const SCRIPTS = Object.freeze({
 
 //CONFIG STUFF 
 export const SERVERFILE = '/txt/servers.txt' //where found server list is stored
-export const SERVERCOUNT = 5
 
 export const SHAREPERCENT = 0.40 //Amount of overall RAM to spend on share()
 
@@ -18,9 +17,9 @@ export const XPTARGET = 'joesguns'
 
 export const PREPARESCRIPT = "/bin/prepareServer.js"
 
-export const BATCHTARGET = "n00dles" //default target server
+export const SERVERCOUNT = 5 //number of servers to target
 export const BATCHMAX = 5 //Maximum number of batches per server
-export const HACKAMOUNT = 0.99 //Default hack amount
+export const HACKAMOUNT = 0.50 //Default hack amount
 export const BATCHDELAY = 50; //Delay between batch steps 
 export const GROWTHAMOUNT = 2 //Default growth amount
 
