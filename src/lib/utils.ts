@@ -1,7 +1,11 @@
 import { NS } from "@ns";
 import { DEBUG, SERVERFILE } from "lib/constants";
 
-/**Uses BFS to find every server*/
+/**
+ * Uses BFS to find every server
+ * @param ns 
+ * @returns array of servers
+ */
 export function searchServers(ns: NS): string[] {
 	ns.disableLog("scan")
 	const queue = [ns.getHostname()]
@@ -17,7 +21,11 @@ export function searchServers(ns: NS): string[] {
 	return Array.from(visited)
 }
 
-//returns servers in SERVERFILE. 
+/**
+ * gets servers from SERVERFILE 
+ * @param ns 
+ * @returns array of servers
+ */ 
 export function getServers(ns: NS): string[] {
 	if (ns.fileExists(SERVERFILE)) return JSON.parse(ns.read(SERVERFILE))
 	else {
@@ -27,12 +35,20 @@ export function getServers(ns: NS): string[] {
 }
 
 
-/**Gets a list of all servernames with admin access*/
+/**
+ * Gets a list of all servernames with admin access
+ * @param ns 
+ * @returns array of servers by order of priority()
+ */
 export function getAdminServers(ns: NS): string[] {
 	return getServers(ns).filter(s => ns.hasRootAccess(s))
 }
 
-/**Runs all existing port openers on server */
+/**
+ * Runs all existing port openers on server 
+ * @param ns 
+ * @param server 
+ */
 export function openPorts(ns: NS, server: string) {
 	ns.disableLog("brutessh"), ns.disableLog("relaysmtp")
 	ns.disableLog("httpworm"), ns.disableLog("sqlinject")
@@ -45,20 +61,24 @@ export function openPorts(ns: NS, server: string) {
 	if (ns.fileExists("relaySMTP.exe")) ns.relaysmtp(server)
 }
 
-
-/**Checks if server is hackable*/
-export function canHack(ns: NS, server: string): boolean {
-	return (ns.hasRootAccess(server) && ns.getServerRequiredHackingLevel(server) <= ns.getHackingLevel())
-}
-
-
-
-/**Calculates the total amount of script threads that can be run on server list */
+/**
+ * Calculates the total amount of script threads that can be run on server list 
+ * @param ns 
+ * @param servers list of servers to host script
+ * @param script 
+ * @returns the number of threads that could be run across the server list
+ */
 export function totalAvailableThreads(ns: NS, servers: string[], script: string): number {
 	return servers.reduce((acc, s) => acc + calcThreads(ns, script, s), 0)
 }
 
-/**Calculates number of script threads that can be run on single host server */
+/**
+ * Calculates number of script threads that can be run on single host server 
+ * @param ns 
+ * @param script 
+ * @param host 
+ * @returns thread count
+ */
 export function calcThreads(ns: NS, script: string, host: string): number {
 	if (!ns.serverExists(host)) throw ("Invalid Server Name")
 	let maxRam = ns.getServerMaxRam(host)
@@ -71,34 +91,40 @@ export function calcThreads(ns: NS, script: string, host: string): number {
 
 /**Sleeps until all pids stop running 
  * @param ns 
- * @param pids Array of pids
- * @param message Message to be sent upon completion
+ * @param pids 
 */
-export async function waitPids(ns: NS, pids: number | number[], message = ""): Promise<void> {
+export async function waitPids(ns: NS, pids: number | number[]): Promise<void> {
 	if (!Array.isArray(pids)) pids = [pids];
 	while (pids.some(p => ns.isRunning(p))) { await ns.sleep(5); }
-	if (message) ns.print(message)
 }
+/**
+ * Sleeps until any pid stop running
+ * @param ns 
+ * @param pids 
+ */
 export async function waitAnyPids(ns: NS, pids: number | number[]): Promise<void> {
 	if (!Array.isArray(pids)) pids = [pids];
 	while (pids.every(p => ns.isRunning(p))) { await ns.sleep(5); }
 }
 
 
-/**Kills all pids in list
- * @param {NS} ns 
- * @param {Number[]} pids Array of pids
+/**
+ * Kills all pids 
+ * @param ns 
+ * @param pids 
  */
 export function killPids(ns: NS, pids: number[]) {
 	pids.forEach(p => ns.kill(p))
 }
 
-/**Deploys script threads across as many servers as necessary
- * @param {NS} ns
- * @param {string} script script to be deployed
- * @param {Number} threads number of threads to deploy
- * @param {string[]} servers Array of server hostnames
- * @return {Number[]} Array of pids of deployed scripts
+/**
+ * Attempts to start a given script across server list
+ * @param ns 
+ * @param script 
+ * @param threads 
+ * @param servers servers to host script
+ * @param args args to be given to script
+ * @returns 
  */
 export function deployScript(ns: NS, script: string, threads: number, servers: string[], ...args: string[]): number[] {
 	if (threads === 0) return []

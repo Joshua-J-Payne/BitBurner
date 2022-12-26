@@ -7,7 +7,7 @@ import { BATCHDELAY, DEBUG } from "lib/constants";
  * Sorts a given list of servers by priority
  * @param ns 
  * @param servers list of servers
- * @returns Sorted array of servers
+ * @returns sorted array of servers
  */
 export function prioritizeServers(ns: NS, servers: string[]): string[] {
 	return servers.sort((a: string, b: string) => priority(ns, b) - priority(ns, a))
@@ -65,13 +65,22 @@ export function isPrepared(ns: NS, targets: string | string[]): boolean {
 }
 
 
-
+/**
+ * Waits until all batches are complete
+ * @param ns 
+ * @param batches 
+ */
 export async function waitBatches(ns: NS, batches: Batch[] | Batch) {
 	if (!Array.isArray(batches)) batches = [batches]
 	if (DEBUG)
 		ns.print(`WARN Waiting on all batches ${batches.reduce((acc, b) => acc + b.id + ',', "")}`)
 	while (batches.some(b => b && b.isDeployed())) { await ns.sleep(5) }
 }
+/**
+ * Waits until any batch completes
+ * @param ns 
+ * @param batches 
+ */
 export async function waitAnyBatches(ns: NS, batches: Batch[] | Batch) {
 	if (!Array.isArray(batches)) batches = [batches]
 	if (DEBUG)
@@ -80,16 +89,16 @@ export async function waitAnyBatches(ns: NS, batches: Batch[] | Batch) {
 }
 
 /**
- * Deploys HWGW batches until one fails to deploy
+ * Creates and deploys HWGW batches until one fails to deploy
  * @param ns 
  * @param target 
- * @param batchCnt 
- * @param hackAmount 
+ * @param count number of batches to deploy
+ * @param hackAmount hacking percentage
  * @returns array of deployed batches
  */
-export async function deployHWGW(ns: NS, target: string, batchCnt: number, hackAmount?: number) {
+export async function deployHWGW(ns: NS, target: string, count: number, hackAmount?: number) {
 	const batches = []
-	for (let i = 0; i < batchCnt; i++) {
+	for (let i = 0; i < count; i++) {
 		await ns.sleep(BATCHDELAY)
 		if (hackAmount)
 			batches.push(new HWGW(ns, target, `HWGW-${target}-${i}`, hackAmount))
@@ -99,16 +108,16 @@ export async function deployHWGW(ns: NS, target: string, batchCnt: number, hackA
 	return batches
 }
 /**
- * Deploys GW batches until one fails to deploy
+ * Creates and deploys GW batches until one fails to deploy
  * @param ns 
  * @param target 
- * @param batchCnt 
- * @param growAmount 
- * @returns 
+ * @param count number of batches to deploy
+ * @param growAmount growth multiplier
+ * @returns array of deployed batches
  */
-export async function deployGW(ns: NS, target: string, batchCnt: number, growAmount?: number) {
+export async function deployGW(ns: NS, target: string, count: number, growAmount?: number) {
 	const batches = []
-	for (let i = 0; i < batchCnt; i++) {
+	for (let i = 0; i < count; i++) {
 		await ns.sleep(BATCHDELAY)
 		if (growAmount)
 			batches.push(new GW(ns, target, `GW-${target}-${i}`, growAmount))
