@@ -30,7 +30,14 @@ async function prepareServer(ns: NS, target: string, servers: string[]) {
     //GW Batch
     while (!isGrown(ns, target)) {
         ns.print(`INFO PREP: Trying single GW batch on ${target}...`)
-        const batch = new GW(ns, target, `GW-${target}-0`)
+        let batch = undefined
+        const maxMoney = ns.getServerMaxMoney(target)
+        if (maxMoney === 0)
+            batch = new GW(ns, target, `GW-${target}-0`)
+        else {
+            const growAmount = maxMoney / ns.getServerMoneyAvailable(target)
+            batch = new GW(ns, target, `GW-${target}-0`, growAmount)
+        }
         if (batch.deploy()) {
             ns.print(`SUCCESS PREP: Deployed ${batch.id}!`)
             await waitBatches(ns, batch)
