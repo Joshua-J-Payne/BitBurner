@@ -79,7 +79,14 @@ export async function waitAnyBatches(ns: NS, batches: Batch[] | Batch) {
 	while (batches.every(b => b && b.isDeployed())) { await ns.sleep(5) }
 }
 
-//Deploys HWGW batches until one fails, returns batches
+/**
+ * Deploys HWGW batches until one fails to deploy
+ * @param ns 
+ * @param target 
+ * @param batchCnt 
+ * @param hackAmount 
+ * @returns array of deployed batches
+ */
 export async function deployHWGW(ns: NS, target: string, batchCnt: number, hackAmount?: number) {
 	const batches = []
 	for (let i = 0; i < batchCnt; i++) {
@@ -91,7 +98,14 @@ export async function deployHWGW(ns: NS, target: string, batchCnt: number, hackA
 	}
 	return batches
 }
-//Deploys GW batches until one fails, returns batches
+/**
+ * Deploys GW batches until one fails to deploy
+ * @param ns 
+ * @param target 
+ * @param batchCnt 
+ * @param growAmount 
+ * @returns 
+ */
 export async function deployGW(ns: NS, target: string, batchCnt: number, growAmount?: number) {
 	const batches = []
 	for (let i = 0; i < batchCnt; i++) {

@@ -8,30 +8,31 @@ export async function main(ns: NS) {
     ns.disableLog("ALL")
     const flags = ns.flags([['tail', false]])
     if (flags.tail) ns.tail()
+
     const servers = getAdminServers(ns)
     const targets = prioritizeServers(ns, servers).slice(0, SERVERCOUNT)
-    const flights = new Map<string, Batch[]>()
+    const attacks = new Map<string, Batch[]>()
     // eslint-disable-next-line no-constant-condition
     while (true) {
         await ns.sleep(5)
         for (const t of targets) {
-            if (ns.isRunning(PREPARESCRIPT, "home", t)) continue
-            else if (!isPrepared(ns, t)) {
+            if (!isPrepared(ns, t)) {
+                if (ns.isRunning(PREPARESCRIPT, "home", t)) continue
                 ns.print(`INFO AUTOCTRL: Prepping ${t}`)
                 ns.exec(PREPARESCRIPT, "home", 1, t)
             }
-            //If we've already deployed a flight of batches for target, redeploy it
-            else if (flights.has(t)) {
-                const batches = flights.get(t)
+            //If we've already deployed an attack for target, redeploy it
+            else if (attacks.has(t)) {
+                const batches = attacks.get(t)
                 if (!batches || batches.some(b => b.isDeployed())) continue
                 ns.print(`INFO AUTOCTRL: Re-Attacking ${t}`)
                 batches.forEach(b => b.deploy());
             }
-            //create and deploy new batches
+            //create and deploy new attack
             else {
                 ns.print(`INFO AUTOCTRL: Attacking ${t}`)
                 const batches = await deployHWGW(ns, t, BATCHMAX)
-                flights.set(t, batches)
+                attacks.set(t, batches)
             }
         }
     }

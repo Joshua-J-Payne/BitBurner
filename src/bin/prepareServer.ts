@@ -16,30 +16,30 @@ async function prepareServer(ns: NS, target: string, servers: string[]) {
     while (!isWeakened(ns, target)) {
         const requiredWeakens = calcWeakens(ns, target)
         ns.print(`INFO PREP: Weakening server with ${requiredWeakens} threads...`)
-        const deployedThreads = Math.min(totalAvailableThreads(ns, servers, SCRIPTS.WEAKEN), requiredWeakens)
+        const deployableThreads = Math.min(totalAvailableThreads(ns, servers, SCRIPTS.WEAKEN), requiredWeakens)
         pids.push(...deployScript(
             ns,
             SCRIPTS.WEAKEN,
-            deployedThreads,
+            deployableThreads,
             servers,
             target,
             "0"))
         await waitPids(ns, pids)
     }
 
-    //GW Batch
+    //GW Batching
     while (!isGrown(ns, target)) {
         ns.print(`INFO PREP: Trying single GW batch on ${target}...`)
         let batch = undefined
         const maxMoney = ns.getServerMaxMoney(target)
         if (maxMoney === 0)
-            batch = new GW(ns, target, `GW-${target}-0`)
+            batch = new GW(ns, target, `GW-${target}-S`)
         else {
             const growAmount = maxMoney / ns.getServerMoneyAvailable(target)
-            batch = new GW(ns, target, `GW-${target}-0`, growAmount)
+            batch = new GW(ns, target, `GW-${target}-S`, growAmount)
         }
         if (batch.deploy()) {
-            ns.print(`SUCCESS PREP: Deployed ${batch.id}!`)
+            ns.print(`SUCCESS PREP: Deployed ${batch.id} Waiting...!`)
             await waitBatches(ns, batch)
         }
         else {
