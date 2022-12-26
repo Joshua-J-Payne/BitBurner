@@ -1,5 +1,5 @@
 import { NS } from "@ns";
-import { deployHWGW, isPrepared, prioritizeServers, waitAnyBatches } from "lib/batchlib";
+import { deployHWGW, isPrepared, prioritizeServers } from "lib/batchlib";
 import { BATCHMAX, PREPARESCRIPT, SERVERCOUNT } from "lib/constants";
 import { getAdminServers } from "lib/utils";
 
@@ -20,18 +20,12 @@ export async function main(ns: NS) {
                 ns.print(`INFO AUTOCTRL: Prepping ${t}`)
                 ns.exec(PREPARESCRIPT, "home", 1, t)
             }
-            //If we've already deployed a flight of batches, redeploy it
+            //If we've already deployed a flight of batches for target, redeploy it
             else if (flights.has(t)) {
                 const batches = flights.get(t)
-                if (batches) {
-                    await waitAnyBatches(ns, batches)
-                    batches.forEach(b => {
-                        if (!b.isDeployed()) {
-                            ns.print(`INFO AUTOCTRL: Re-Attacking ${t}`)
-                            b.deploy()
-                        }
-                    });
-                }
+                if (!batches || batches.some(b => b.isDeployed())) continue
+                ns.print(`INFO AUTOCTRL: Re-Attacking ${t}`)
+                batches.forEach(b => b.deploy());
             }
             //create and deploy new batches
             else {
