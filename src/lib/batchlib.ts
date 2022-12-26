@@ -79,29 +79,27 @@ export async function waitAnyBatches(ns: NS, batches: Batch[] | Batch) {
 	while (batches.every(b => b && b.isDeployed())) { await ns.sleep(5) }
 }
 
-//Deploys batches until one fails, returnas batches
+//Deploys HWGW batches until one fails, returns batches
 export async function deployHWGW(ns: NS, target: string, batchCnt: number, hackAmount?: number) {
-	const batches = Array<HWGW>(batchCnt)
+	const batches = []
 	for (let i = 0; i < batchCnt; i++) {
 		await ns.sleep(BATCHDELAY)
 		if (hackAmount)
-			batches[i] = new HWGW(ns, target, `HWGW-${target}-${i}`, hackAmount)
-		else batches[i] = new HWGW(ns, target, `HWGW-${target}-${i}`)
+			batches.push(new HWGW(ns, target, `HWGW-${target}-${i}`, hackAmount))
+		else batches.push(new HWGW(ns, target, `HWGW-${target}-${i}`))
 		if (!batches[i].deploy()) break
 	}
 	return batches
 }
-//Waits until all GW batches deploy, then returns the batch array
+//Deploys GW batches until one fails, returns batches
 export async function deployGW(ns: NS, target: string, batchCnt: number, growAmount?: number) {
-	const batches = Array<GW>(batchCnt)
+	const batches = []
 	for (let i = 0; i < batchCnt; i++) {
 		await ns.sleep(BATCHDELAY)
 		if (growAmount)
-			batches[i] = new GW(ns, target, `GW-${target}-${i}`, growAmount)
-		else batches[i] = new GW(ns, target, `GW-${target}-${i}`)
-		while (!batches[i].deploy()) {
-			await waitAnyBatches(ns, batches)
-		}
+			batches.push(new GW(ns, target, `GW-${target}-${i}`, growAmount))
+		else batches.push(new GW(ns, target, `GW-${target}-${i}`))
+		if (!batches[i].deploy()) break
 	}
 	return batches
 }

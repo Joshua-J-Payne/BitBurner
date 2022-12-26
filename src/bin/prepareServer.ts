@@ -1,6 +1,6 @@
 import { NS } from "@ns";
 import { GW } from "classes/GW";
-import { deployGW, isGrown, isPrepared, isWeakened, waitBatches } from "lib/batchlib";
+import { deployGW, isGrown, isWeakened, waitBatches } from "lib/batchlib";
 import { GROWTHAMOUNT, SCRIPTS } from "lib/constants";
 import { deployScript, getAdminServers, totalAvailableThreads, waitPids } from "lib/utils";
 
@@ -43,14 +43,13 @@ async function prepareServer(ns: NS, target: string, servers: string[]) {
             await waitBatches(ns, batch)
         }
         else {
-            ns.print(`FAIL PREP: Cannot deploy batch! Splitting...`)
             const grows = calcGrows(ns, target)
+            ns.print(`FAIL PREP: Cannot deploy batch! Splitting into ${grows} batches...`)
             const batches = await deployGW(ns, target, grows)
-            ns.print(`SUCCESS PREP: Deployed ${grows} Batches! Waiting...`)
+            ns.print(`INFO PREP: Deployed ${batches.length}/${grows} Batches! Waiting...`)
             await waitBatches(ns, batches)
         }
     }
-    return isPrepared(ns, target)
 }
 
 /**
