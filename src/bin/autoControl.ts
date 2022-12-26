@@ -1,6 +1,6 @@
 import { NS } from "@ns";
 import { deployHWGW, isPrepared, prioritizeServers } from "lib/batchlib";
-import { BATCHDELAY, BATCHMAX, PREPARESCRIPT, SERVERCOUNT } from "lib/constants";
+import { BATCHMAX, PREPARESCRIPT, SERVERCOUNT } from "lib/constants";
 import { getAdminServers } from "lib/utils";
 
 /** @param {NS} ns */
@@ -21,14 +21,14 @@ export async function main(ns: NS) {
                 ns.print(`INFO AUTOCTRL: Prepping ${t}`)
                 ns.exec(PREPARESCRIPT, "home", 1, t)
             }
-            //If we've already deployed an attack for target, redeploy it
+            //Erase attack
             else if (attacks.has(t)) {
                 const batches = attacks.get(t)
                 if (!batches || batches.some(b => b.isDeployed())) continue
-                ns.print(`INFO AUTOCTRL: Re-Attacking ${t}`)
-                for (const b of batches) await ns.sleep(BATCHDELAY), b.deploy()
+                ns.print(`SUCCESS AUTOCTRL: Attack on ${t} complete!`)
+                attacks.delete(t)
             }
-            //create and deploy new attack
+            //Create and deploy new attack
             else {
                 ns.print(`INFO AUTOCTRL: Attacking ${t}`)
                 const batches = await deployHWGW(ns, t, BATCHMAX)
