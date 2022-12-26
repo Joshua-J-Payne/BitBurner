@@ -99,7 +99,7 @@ export class HWGW implements Batch {
 		times[3] = Math.ceil(this.ns.getWeakenTime(this.target))
 		return times
 	}
-	/**Calculate Dleayed Starts for Batch*/
+	/**Calculate delayed starts for batch steps*/
 	private calcBatchDelays(): number[] {
 		const delays = [0, 0, 0, 0]
 		const maxTime = Math.max(...this.times)
@@ -109,17 +109,17 @@ export class HWGW implements Batch {
 		delays[3] = maxTime - this.times[3] + 3 * BATCHDELAY
 		return delays
 	}
-	/**Calculates necessary delays to make batch end simultaneously */
+	/**Calculates when each batch step ends simultaneously */
 	private calcBatchEndTimes(): number[] {
 		return this.times.map((time, idx) => time + this.delays[idx])
 	}
 
-	/**Returns the number of threads required for a batch*/
+	/**Calculates the number of threads required for a batch*/
 	private calcBatchThreads(): number[] {
 		const threads = [0, 0, 0, 0]
 		const growAmount = Math.ceil(1 / (1 - this.hackAmount))
 		const value = this.hackAmount * this.ns.getServerMaxMoney(this.target)
-		threads[0] = Math.ceil(this.ns.hackAnalyzeThreads(this.target, value)) //hack
+		threads[0] = Math.max(Math.ceil(this.ns.hackAnalyzeThreads(this.target, value)),1) //hack
 		threads[1] = Math.ceil(this.ns.hackAnalyzeSecurity(threads[0], this.target) / 0.05) //weak
 		threads[2] = Math.ceil(this.ns.growthAnalyze(this.target, growAmount)) //grow
 		threads[3] = Math.ceil(this.ns.growthAnalyzeSecurity(threads[2]) / 0.05) //weak
