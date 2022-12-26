@@ -2,8 +2,9 @@ import { NS } from "@ns";
 import { SERVERFILE } from "lib/constants";
 import { openPorts, searchServers } from "lib/utils";
 
-/**Updates records of all servers
- * @param {NS} ns
+/**
+ * updates records of all servers
+ * @param ns 
  */
 export async function main(ns: NS) {
 	ns.disableLog("nuke")
