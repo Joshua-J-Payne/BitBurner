@@ -8,7 +8,7 @@ export class HWGW implements Batch {
 	readonly target: string
 	readonly id: string
 	private hackAmount: number
-	readonly threads: number[]
+	private threads: number[]
 	private times: number[]
 	private delays: number[]
 	private ends: number[]
@@ -34,7 +34,7 @@ export class HWGW implements Batch {
 	}
 
 	public deploy(): boolean {
-		if(this.isDeployed()) return true
+		if (this.isDeployed()) return true
 		const servers = getAdminServers(this.ns)
 		//Hack
 		this.pids.push(...deployScript(
@@ -72,14 +72,7 @@ export class HWGW implements Batch {
 			this.target,
 			`${this.delays[3]}`,
 			this.id))
-		if (this.isDeployed()) {
-			this.ns.print(`SUCCESS ${this.id}: Deployed!`)
-			return true
-		}
-		else {
-			this.ns.print(`FAIL ${this.id}: Can't Deploy!`)
-			return false
-		}
+		return this.isDeployed()
 	}
 
 	public kill(): void {
@@ -95,9 +88,6 @@ export class HWGW implements Batch {
 	public async wait() {
 		await waitPids(this.ns, this.pids)
 		this.pids = []
-	}
-	public get totalThreads() {
-		return this.threads.reduce((acc, b) => acc + b, 0)
 	}
 
 	/**Calcuates duration of each batch step*/

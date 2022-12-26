@@ -1,8 +1,8 @@
 import { NS } from "@ns";
 import { GW } from "classes/GW";
-import { calcWeakens, isWeakened } from "lib/batchlib";
 import { SCRIPTS, XPTARGET } from "lib/constants";
-import { deployScript, getServers, totalAvailableThreads, waitBatches, waitPids } from "lib/utils";
+import { isWeakened, waitBatches } from "/lib/batchlib";
+import { deployScript, getServers, totalAvailableThreads, waitPids } from "/lib/utils";
 
 export async function main(ns: NS): Promise<void> {
     ns.disableLog("ALL")
@@ -13,7 +13,7 @@ export async function main(ns: NS): Promise<void> {
         const pids = []
         while (!isWeakened(ns, target)) {
             await ns.sleep(5)
-            const requiredWeakens = calcWeakens(ns, target)
+            const requiredWeakens = ns.getServerSecurityLevel(target) / ns.getServerMinSecurityLevel(target)
             ns.print(`INFO XP: Weakening server with ${requiredWeakens} threads...`)
             const deployedThreads = Math.min(totalAvailableThreads(ns, servers, SCRIPTS.WEAKEN), requiredWeakens)
             pids.push(...deployScript(

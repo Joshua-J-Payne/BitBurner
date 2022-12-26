@@ -8,7 +8,7 @@ export class GW implements Batch {
 	readonly id: string
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private growAmount: number
-	readonly threads: number[]
+	private threads: number[]
 	private times: number[]
 	private delays: number[]
 	private ends: number[]
@@ -33,7 +33,7 @@ export class GW implements Batch {
 		return false
 	}
 	public deploy(): boolean {
-		if(this.isDeployed()) return true
+		if (this.isDeployed()) return true
 		const servers = getAdminServers(this.ns)
 		this.pids.push(...deployScript(this.ns,
 			SCRIPTS.GROW,
@@ -49,14 +49,7 @@ export class GW implements Batch {
 			this.target,
 			`${this.delays[1]}`,
 			this.id))
-		if (this.isDeployed()) {
-			this.ns.print(`SUCCESS ${this.id}: Deployed!`)
-			return true
-		}
-		else {
-			this.ns.print(`FAIL ${this.id}: Can't Deploy!`)
-			return false
-		}
+		return this.isDeployed()
 	}
 
 	public kill(): void {
@@ -77,9 +70,6 @@ export class GW implements Batch {
 	public async wait(): Promise<void> {
 		await waitPids(this.ns, this.pids)
 		this.pids = []
-	}
-	public get totalThreads(): number {
-		return this.threads.reduce((acc, b) => acc + b, 0)
 	}
 
 	/**Calcuates duration of each batch step*/
@@ -104,7 +94,7 @@ export class GW implements Batch {
 
 	/**Returns the number of threads required for a batch*/
 	private calcBatchThreads(): number[] {
-		const threads = []
+		const threads = [0, 0]
 		threads[0] = Math.ceil(this.ns.growthAnalyze(this.target, this.growAmount))
 		threads[1] = Math.ceil(this.ns.growthAnalyzeSecurity(threads[0]) / 0.05)
 		return threads

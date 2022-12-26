@@ -1,6 +1,5 @@
 declare interface Batch {
 	target: string
-	threads: number[]
 	id: string
 	isDeployed(): boolean
 	log(): void

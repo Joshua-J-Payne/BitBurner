@@ -84,18 +84,6 @@ export async function waitAnyPids(ns: NS, pids: number | number[]): Promise<void
 	while (pids.every(p => ns.isRunning(p))) { await ns.sleep(5); }
 }
 
-export async function waitBatches(ns: NS, batches: Batch[] | Batch) {
-	if (!Array.isArray(batches)) batches = [batches]
-	if (DEBUG)
-		ns.print(`WARN Waiting on all batches ${batches.reduce((acc, b) => acc + b.id + ',', "")}`)
-	while (batches.some(b => b && b.isDeployed())) { await ns.sleep(5) }
-}
-export async function waitAnyBatches(ns: NS, batches: Batch[] | Batch) {
-	if (!Array.isArray(batches)) batches = [batches]
-	if (DEBUG)
-		ns.print(`WARN Waiting on a batch to end ${batches.reduce((acc, b) => acc + b.id + ',', "")}`)
-	while (batches.every(b => b && b.isDeployed())) { await ns.sleep(5) }
-}
 
 /**Kills all pids in list
  * @param {NS} ns 

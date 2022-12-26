@@ -1,8 +1,8 @@
 import { NS } from "@ns";
 import { GW } from "classes/GW";
-import { calcGrows, calcWeakens, deployGW, isGrown, isPrepared, isWeakened } from "lib/batchlib";
-import { SCRIPTS } from "lib/constants";
-import { deployScript, getAdminServers, totalAvailableThreads, waitBatches, waitPids } from "lib/utils";
+import { deployGW, isGrown, isPrepared, isWeakened, waitBatches } from "lib/batchlib";
+import { GROWTHAMOUNT, SCRIPTS } from "lib/constants";
+import { deployScript, getAdminServers, totalAvailableThreads, waitPids } from "lib/utils";
 
 export async function main(ns: NS): Promise<void> {
     ns.disableLog("ALL")
@@ -29,9 +29,8 @@ async function prepareServer(ns: NS, target: string, servers: string[]) {
 
     //GW Batch
     while (!isGrown(ns, target)) {
-        const growAmount = ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target)
-        ns.print(`INFO PREP: Trying single GW Batch...`)
-        const batch = new GW(ns, target, `GW-${target}-0`, growAmount)
+        ns.print(`INFO PREP: Trying single GW batch on ${target}...`)
+        const batch = new GW(ns, target, `GW-${target}-0`)
         if (batch.deploy()) {
             ns.print(`SUCCESS PREP: Deployed ${batch.id}!`)
             await waitBatches(ns, batch)
@@ -39,14 +38,33 @@ async function prepareServer(ns: NS, target: string, servers: string[]) {
         else {
             ns.print(`FAIL PREP: Cannot deploy batch! Splitting...`)
             const grows = calcGrows(ns, target)
-            await deployGW(ns, target, grows)
-            ns.print(`SUCCESS PREP: Deployed ${grows} Batches!`)
+            const batches = await deployGW(ns, target, grows)
+            ns.print(`SUCCESS PREP: Deployed ${grows} Batches! Waiting...`)
+            await waitBatches(ns, batches)
         }
     }
     return isPrepared(ns, target)
 }
 
+/**
+ * @param ns 
+ * @param target 
+ * @returns the number of default grow batches required to max out a server
+ */
+function calcGrows(ns: NS, target: string) {
+    if (ns.getServerMoneyAvailable(target) === 0) return 1
+    return Math.ceil((Math.log2(ns.getServerMaxMoney(target) / ns.getServerMoneyAvailable(target)) / Math.log2(GROWTHAMOUNT)))
+}
 
+/** 
+ * @param ns 
+ * @param target 
+ * @returns The number of weaken threads required to take server to min security
+ */
+function calcWeakens(ns: NS, target: string) {
+    return Math.ceil((ns.getServerSecurityLevel(target)
+        - ns.getServerMinSecurityLevel(target)) / 0.05)
+}
 
 
 
