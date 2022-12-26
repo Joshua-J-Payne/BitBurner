@@ -9,7 +9,7 @@ export async function main(ns: NS) {
     const flags = ns.flags([['tail', false]])
     if (flags.tail) ns.tail()
     const servers = getAdminServers(ns)
-    const targets = prioritizeServers(ns, servers).slice(0, SERVERCOUNT - 1)
+    const targets = prioritizeServers(ns, servers).slice(0, SERVERCOUNT)
     const flights = new Map<string, Batch[]>()
     // eslint-disable-next-line no-constant-condition
     while (true) {
