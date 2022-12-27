@@ -8,6 +8,7 @@ import { openPorts, searchServers } from "lib/utils";
  */
 export async function main(ns: NS) {
 	ns.disableLog("nuke")
+	ns.disableLog("disableLog")
 	const data = ns.flags([
 		['nuke', false]
 	]);
@@ -16,10 +17,11 @@ export async function main(ns: NS) {
 
 	if (data.nuke) {
 		for (const s of servers) openPorts(ns, s)
-		for (const s of servers) ns.nuke(s)
-		ns.exit()
+		for (const s of servers) {
+			try { ns.nuke(s) }
+			catch(e) {ns.print(e)}
+			ns.tail()
+			ns.exit()
+		}
 	}
-
-
-
 }

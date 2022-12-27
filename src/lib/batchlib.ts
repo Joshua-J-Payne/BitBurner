@@ -18,11 +18,14 @@ export function prioritizeServers(ns: NS, servers: string[]): string[] {
 function priority(ns: NS, server: string) {
 	if (!server) return 0;
 
+	if (server == "home") return 0;
+	
 	// Don't ask, endgame stuff
 	if (server.startsWith('hacknet-node')) return 0;
 
 	// Get the player information
 	const player = ns.getPlayer();
+
 
 	// Get the server information
 	const so = ns.getServer(server);

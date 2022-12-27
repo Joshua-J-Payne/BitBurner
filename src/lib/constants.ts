@@ -26,4 +26,4 @@ export const GROWTHAMOUNT = 2 //Default growth amount
 
 export const PSERVBUFFER = 20_000_000_000; //Money required before purchasing servers
 export const PSERVPREFIX = "pserv-" //pserv naming convention
-export const PSERVMINRAM = 2 //pserv purchasing starting point
+export const PSERVMINRAM = 4 //pserv purchasing starting point
